@@ -14,6 +14,12 @@
 // Детали символа того же цвета, что фон (белая звезда на светлом фоне и т.п.),
 // становятся прозрачными и показывают backgroundColor — визуально то же самое.
 //
+// --full: для иконок, где символ того же цвета, что фон (белый календарь на
+// светлом фоне и т.п.), вырезание по цвету ломает рисунок. В этом режиме
+// картинка берётся ЦЕЛИКОМ без внешних скруглённых углов (центральные 90%),
+// вписывается в квадрат 600/1024 (диагональ ≈ видимому кругу маски), а фон
+// заливается медианным цветом края — рисунок цел, двойных углов нет.
+//
 // Запуск (из папки проекта, нужен установленный node_modules — jimp-compact
 // приходит транзитивно с expo):
 //   node tools/adaptive-icon.js [icon.png] [out.png] [--scale 0.44] [--preview preview.png]
@@ -32,7 +38,9 @@ const flag = (name, def) => {
   args.splice(i, 2);
   return v;
 };
-const scale = Number(flag("--scale", "0.44"));
+const full = args.includes("--full");
+if (full) args.splice(args.indexOf("--full"), 1);
+const scale = Number(flag("--scale", full ? "0.6" : "0.44"));
 const previewPath = flag("--preview", "release/creo/adaptive-preview.png");
 const input = args[0] ?? "release/creo/icon.png";
 const output = args[1] ?? "release/creo/adaptive-foreground.png";
@@ -58,6 +66,33 @@ const hex = (c) => "#" + c.map((v) => Math.round(v).toString(16).padStart(2, "0"
   }
   const med = (k) => samples.map((s) => s[k]).sort((a, b) => a - b)[samples.length >> 1];
   const bg = [med(0), med(1), med(2)];
+
+  if (full) {
+    const inner = Math.round(w * 0.9);
+    const off = Math.round((w - inner) / 2);
+    const art = img.clone().crop(off, off, inner, inner);
+    const target = Math.round(1024 * scale);
+    art.resize(target, target);
+    // Растушёвка края (последние 5%): без неё на стыке с фоном виден квадрат.
+    const fe = Math.round(target * 0.05);
+    art.scan(0, 0, target, target, function (x, y, i) {
+      const d = Math.min(x, y, target - 1 - x, target - 1 - y);
+      if (d < fe) this.bitmap.data[i + 3] = Math.round(this.bitmap.data[i + 3] * (d / fe));
+    });
+    const out = new Jimp(1024, 1024, 0x00000000);
+    out.composite(art, (1024 - target) >> 1, (1024 - target) >> 1);
+    await out.writeAsync(output);
+    const prev = new Jimp(1024, 1024, Jimp.rgbaToInt(bg[0], bg[1], bg[2], 255));
+    prev.composite(out, 0, 0);
+    prev.scan(0, 0, 1024, 1024, function (x, y, i) {
+      if (Math.hypot(x - 512, y - 512) > (512 * 72) / 108) this.bitmap.data[i + 3] = 0;
+    });
+    await prev.writeAsync(previewPath);
+    console.log(`foreground: ${output}  (full artwork)`);
+    console.log(`preview:    ${previewPath}`);
+    console.log(`app.json → android.adaptiveIcon = { foregroundImage: "./${output.replace(/\\/g, "/")}", backgroundColor: "${hex(bg)}" }`);
+    return;
+  }
 
   // Порог "это фон" — по разбросу самого фона (градиенты), "это символ" —
   // 90-й перцентиль удалённости среди явно не фоновых пикселей.
