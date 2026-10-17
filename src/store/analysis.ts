@@ -53,7 +53,7 @@ export function analyze(readings: Reading[], stored: TrendState | null, s: Setti
     noiseSd: state ? Math.sqrt(noiseVar(state)) : null,
     weekday: state ? weekdayEffects(state) : new Array(7).fill(0),
     goal,
-    check: state && goal ? check(state, nowDay, goal, fmt) : null,
+    check: state && goal ? check(state, nowDay, goal, fmt, (kg) => fmtWeight(kg, s.units, 2)) : null,
     eta: state && goal && state.n >= 3 ? eta(state, nowDay, goal.targetKg) : null,
   };
 }

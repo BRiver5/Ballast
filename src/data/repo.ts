@@ -1,6 +1,6 @@
 import { getDb } from "../db/client";
 import { generateId } from "../lib/id";
-import { replay, update, type TrendState } from "../lib/trend.ts";
+import { MODEL_VERSION, replay, update, type TrendState } from "../lib/trend.ts";
 import { dayNumber } from "../lib/time.ts";
 import type { Units } from "../lib/body.ts";
 
@@ -54,6 +54,11 @@ function toReading(r: Row): Reading {
 
 export async function loadAll() {
   const db = await getDb();
+  const mv = await db.getFirstAsync<{ value: string }>("SELECT value FROM settings WHERE key = 'modelVersion'");
+  if (!mv || JSON.parse(mv.value) !== MODEL_VERSION) {
+    await rebuildModel();
+    await db.runAsync("INSERT OR REPLACE INTO settings (key, value) VALUES ('modelVersion', ?)", [JSON.stringify(MODEL_VERSION)]);
+  }
   const readings = (await db.getAllAsync<Row>("SELECT * FROM readings ORDER BY date, minute")).map(toReading);
   const srows = await db.getAllAsync<{ key: string; value: string }>("SELECT * FROM settings");
   const settings: Settings = { ...DEFAULT_SETTINGS };

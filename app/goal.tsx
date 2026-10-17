@@ -177,7 +177,7 @@ export default function GoalScreen() {
               <Cmp label="Deadline" a={a.goal.deadlineDay ? dayLabel(fromDayNumber(a.goal.deadlineDay)) : "none"} b={wi.goalAfter.deadlineDay ? dayLabel(fromDayNumber(wi.goalAfter.deadlineDay)) : "none"} />
               <Cmp label="Pace" a={`${fmtDelta(wi.before.trendPace, u)}/wk`} b={`${fmtDelta(sc.pace ?? wi.before.trendPace, u)}/wk`} />
               <Cmp label="Weeks to target" a={weeks(wi.before.eta.p50)} b={weeks(wi.etaAfter.p50)} better={(wi.etaAfter.p50 ?? 1e9) < (wi.before.eta.p50 ?? 1e9)} worse={(wi.etaAfter.p50 ?? 1e9) > (wi.before.eta.p50 ?? 1e9)} />
-              <Cmp label="Needed per week" a={wi.before.requiredPace !== null ? fmt(wi.before.requiredPace) : "—"} b={wi.after.requiredPace !== null ? fmt(wi.after.requiredPace) : "—"} />
+              <Cmp label="Needed per week" a={wi.before.requiredPace !== null && Number.isFinite(wi.before.requiredPace) ? fmtWeight(wi.before.requiredPace, u, 2) : "—"} b={wi.after.requiredPace !== null && Number.isFinite(wi.after.requiredPace) ? fmtWeight(wi.after.requiredPace, u, 2) : "—"} />
               <Cmp label="Status" a={STATUS[wi.before.status]} b={STATUS[wi.after.status]} />
               <Text style={{ ...t.typography.caption, color: t.colors.inkFaint }}>
                 "If you kept this pace" replaces your trend's speed, keeping today's level and its uncertainty.
@@ -215,7 +215,6 @@ function StatusBlock({ c, fmt, u, nowDay }: { c: Check; fmt: (kg: number) => str
         <Text style={{ ...t.typography.caption, color: t.colors.inkMuted }}>
           Trend {fmtDelta(c.trendPace, u)}/week · {pct(c.eta.pToward)} chance it's heading your way
           {c.eta.p50 !== null ? ` · at this pace about ${dayLabel(fromDayNumber(Math.floor(nowDay + c.eta.p50)))} (likely ${weeks(c.eta.p10)}–${weeks(c.eta.p90)} weeks)` : ""}
-          {c.requiredPace !== null && Number.isFinite(c.requiredPace) ? ` · deadline needs ${fmt(c.requiredPace)}/week` : ""}
         </Text>
       ) : null}
     </View>

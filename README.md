@@ -1,43 +1,19 @@
 # Ballast
 
-**{{TAGLINE}}**
+Weight and BMI log that shows the trend, not the noisy scale. A Kalman filter
+learns your normal day-to-day swing and day-of-week pattern, tells you when the
+current trend reaches your target (with a likely range), checks your goal
+against your own pace limit with verified ways to make it fit, and explains
+every reading: trend + weekday + noise.
 
-{{Один абзац о том, что делает приложение и для кого.}}
+- Expo SDK 54, expo-router, expo-sqlite, reanimated, gesture-handler, react-native-svg
+- No backend, no network permission. Optional morning reminder (installed build only).
+- Informational only — not medical advice.
 
-## Особенности
-
-- ...
-
-## Стек
-
-- Expo SDK 54 + expo-router, TypeScript
-- `expo-sqlite` — вся persistence локально на устройстве, интернет не нужен
-- `expo-notifications` / `expo-haptics` — если приложение их использует
-
-## Запуск
-
-```bash
+```
 npm install
-npx expo start
+npx expo start          # Expo Go
+npm run verify          # tsc + tests + rules + export
 ```
 
-`a` — Android, `i` — iOS, либо QR-код через Expo Go.
-
-## Структура проекта
-
-```
-app/            expo-router экраны
-src/
-  theme/        палитра, типографика, отступы, анимации
-  db/           expo-sqlite схема + миграции
-  data/         доступ к данным (замени items.example.ts)
-  services/     notifications, haptics
-  components/   переиспользуемые UI-примитивы
-  lib/          id, даты
-tools/          генератор иконок, проверки, rename-скрипт
-```
-
-## Данные
-
-Все данные хранятся локально на устройстве. Регистрации нет, интернет не
-требуется для работы приложения.
+Engine and design notes: [PLAN.md](PLAN.md).

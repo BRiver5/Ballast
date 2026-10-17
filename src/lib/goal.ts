@@ -43,7 +43,8 @@ export type Check = {
 
 const WRONG_WAY_P = 0.2; // тренд идёт к цели с вероятностью меньше этой — "в другую сторону"
 
-export function check(s: TrendState, nowDay: number, g: Goal, fmt: (kg: number) => string): Check {
+// fmtPace — темп с двумя знаками: 0.63 против лимита 0.5 не должно читаться как "0.6".
+export function check(s: TrendState, nowDay: number, g: Goal, fmt: (kg: number) => string, fmtPace: (kg: number) => string = fmt): Check {
   const p = predict(s, nowDay);
   const gap = g.targetKg - p.level;
   const e = eta(s, nowDay, g.targetKg);
@@ -62,11 +63,11 @@ export function check(s: TrendState, nowDay: number, g: Goal, fmt: (kg: number) 
     reasons.push("The deadline has passed.");
   } else if (requiredPace !== null && requiredPace > g.paceLimit + 1e-9) {
     conflict = true;
-    reasons.push(`Reaching ${fmt(g.targetKg)} by the deadline needs ${fmt(requiredPace)}/week — above your limit of ${fmt(g.paceLimit)}/week.`);
+    reasons.push(`Reaching ${fmt(g.targetKg)} by the deadline needs ${fmtPace(requiredPace)}/week — above your limit of ${fmtPace(g.paceLimit)}/week.`);
   }
   if (e.pToward < WRONG_WAY_P) {
     conflict = true;
-    reasons.push(`Your trend is moving ${trendPace > 0 ? "up" : "down"} (${fmt(Math.abs(trendPace))}/week), away from the target.`);
+    reasons.push(`Your trend is moving ${trendPace > 0 ? "up" : "down"} (${fmtPace(Math.abs(trendPace))}/week), away from the target.`);
   }
 
   if (!conflict) {

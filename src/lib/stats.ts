@@ -32,7 +32,12 @@ export function timeInBands(f: Fitted[], heightCm: number): Record<Band, number>
   return r;
 }
 
+// Делим на недели, которые реально прошли с первого взвешивания (не больше
+// `weeks`): иначе у нового пользователя выходило бы "2 в неделю" при ежедневных.
 export function weighInsPerWeek(f: Fitted[], todayDay: number, weeks = 8): number {
+  if (f.length === 0) return 0;
+  const span = Math.min(weeks, Math.max(1, (Math.floor(todayDay) + 1 - Math.floor(f[0].day)) / 7));
+  weeks = span;
   const from = todayDay - weeks * 7;
   const days = new Set(f.filter((x) => x.day > from).map((x) => Math.floor(x.day)));
   return days.size / weeks;

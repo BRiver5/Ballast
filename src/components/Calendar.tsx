@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Text, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { runOnJS } from "react-native-reanimated";
@@ -30,6 +30,10 @@ export function MonthCalendar({
   onDay: (date: string) => void;
 }) {
   const t = useTheme();
+  // Ширина ячейки в пикселях: 7 × "14.28%" из-за округления иногда не влезает
+  // в строку, и неделя переносилась по 6 дней (поймано на эмуляторе).
+  const [gridW, setGridW] = useState(0);
+  const cellW = gridW > 0 ? Math.floor(gridW / 7) : 0;
   const [y, m] = month.split("-").map(Number);
   const dim = daysInMonth(y, m);
   const lead = (new Date(Date.UTC(y, m - 1, 1)).getUTCDay() + 6) % 7;
@@ -70,15 +74,15 @@ export function MonthCalendar({
         ))}
       </View>
       <GestureDetector gesture={swipe}>
-        <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+        <View onLayout={(e) => setGridW(e.nativeEvent.layout.width)} style={{ flexDirection: "row", flexWrap: "wrap" }}>
           {cells.map((date, i) => {
-            if (!date) return <View key={i} style={{ width: `${100 / 7}%`, aspectRatio: 1 }} />;
+            if (!date) return <View key={i} style={{ width: cellW, height: cellW }} />;
             const mk = marks[date];
             const isToday = date === today;
             const isSel = date === selected;
             const future = date > today;
             return (
-              <View key={i} style={{ width: `${100 / 7}%`, aspectRatio: 1, padding: 2 }}>
+              <View key={i} style={{ width: cellW, height: cellW, padding: 2 }}>
                 <PressableScale
                   onPress={() => !future && onDay(date)}
                   disabled={future}
@@ -94,7 +98,7 @@ export function MonthCalendar({
                   }}
                 >
                   <Text style={{ ...t.typography.label, color: isSel ? t.colors.onAccent : future ? t.colors.inkFaint : t.colors.ink }}>{Number(date.slice(8))}</Text>
-                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: mk ? (isSel ? t.colors.onAccent : residualColor(mk.z)) : "transparent" }} />
+                  <View style={{ width: 8, height: 8, borderRadius: 999, backgroundColor: mk ? (isSel ? t.colors.onAccent : residualColor(mk.z)) : "transparent" }} />
                 </PressableScale>
               </View>
             );

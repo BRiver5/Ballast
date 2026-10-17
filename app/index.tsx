@@ -108,7 +108,7 @@ export default function Home() {
                 {b !== null ? <BandPill band={bandOf(b)} /> : null}
               </View>
             ) : (
-              <Text style={{ ...t.typography.title, color: t.colors.inkMuted }}>Tap today in the calendar to start</Text>
+              <Text style={{ ...t.typography.subtitle, color: t.colors.inkMuted }}>Tap today in the calendar to log your first weigh-in.</Text>
             )}
             <Text style={{ ...t.typography.caption, color: t.colors.inkMuted }}>
               {a.rate
@@ -154,7 +154,6 @@ export default function Home() {
 function StartCard() {
   const t = useTheme();
   const s = useApp((x) => x.settings);
-  const fi = cmToFtIn(s.heightCm);
   return (
     <Animated.View entering={FadeInDown.duration(400)} style={{ ...card(t), borderColor: t.colors.accent }}>
       <Text style={{ ...t.typography.title, color: t.colors.ink }}>Two things first</Text>
@@ -174,8 +173,9 @@ function StartCard() {
           format={(v) => (s.heightImperial ? `${cmToFtIn(v).ft}′${cmToFtIn(v).inch}″` : `${Math.round(v)} cm`)}
         />
       </View>
-      <Text style={{ ...t.typography.caption, color: t.colors.inkFaint }}>{s.heightImperial ? `${fi.ft} ft ${fi.inch} in` : `${Math.round(s.heightCm)} cm`}</Text>
-      <Chip label="Done" active onPress={() => actions.setSetting("onboarded", true)} />
+      <View style={{ flexDirection: "row" }}>
+        <Chip label="Done" active onPress={() => actions.setSetting("onboarded", true)} />
+      </View>
     </Animated.View>
   );
 }
