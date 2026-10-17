@@ -47,3 +47,6 @@ Thumbs.db
 .emu/
 metro.log*
 build.log
+.emu/
+metro.log*
+build.log
